@@ -186,7 +186,7 @@ double AstarPathFinder::getdistance(GridNodePtr node1, GridNodePtr node2)
     return distance;
 }
 
-double AstarPathFinder::getHeu(GridNodePtr node1, GridNodePtr node2)
+double AstarPathFinder::getHeu(GridNodePtr node1, GridNodePtr node2, int flag)
 {
     /* 
     choose possible heuristic function you want
@@ -200,21 +200,21 @@ double AstarPathFinder::getHeu(GridNodePtr node1, GridNodePtr node2)
     *
     *
     */
-    // Eucldean
-    /* double heuristic;
-    heuristic  = (node1->coord(0) - node2->coord(0)) * (node1->coord(0) - node2->coord(0));
-    heuristic += (node1->coord(1) - node2->coord(1)) * (node1->coord(1) - node2->coord(1));
-    heuristic += (node1->coord(2) - node2->coord(2)) * (node1->coord(2) - node2->coord(2));
-    heuristic = sqrt(heuristic); */
+    // Euclidean
+    double Euclidean_heuristic;
+    Euclidean_heuristic  = (node1->coord(0) - node2->coord(0)) * (node1->coord(0) - node2->coord(0));
+    Euclidean_heuristic += (node1->coord(1) - node2->coord(1)) * (node1->coord(1) - node2->coord(1));
+    Euclidean_heuristic += (node1->coord(2) - node2->coord(2)) * (node1->coord(2) - node2->coord(2));
+    Euclidean_heuristic = sqrt(Euclidean_heuristic);
 
     // Manhattan more fast
-    /* double heuristic;
-    heuristic = abs(node1->coord(0) - node2->coord(0));
-    heuristic += abs(node1->coord(1) - node2->coord(1)) + abs(node1->coord(2) - node2->coord(2)); */
+    double Manhattan_heuristic;
+    Manhattan_heuristic = abs(node1->coord(0) - node2->coord(0));
+    Manhattan_heuristic += abs(node1->coord(1) - node2->coord(1)) + abs(node1->coord(2) - node2->coord(2));
     
 
     // Diagonal 
-    double heuristic;
+    double Diagonal_heuristic;
     double temp;
     double max1 = abs(node1->coord(0) - node2->coord(0));
     double max2 = abs(node1->coord(1) - node2->coord(1));
@@ -238,13 +238,21 @@ double AstarPathFinder::getHeu(GridNodePtr node1, GridNodePtr node2)
         max2 = max3;
         max3 = temp;
     }
-    heuristic = sqrt(3) * max3 + sqrt(2) * max2 + max1 - max2;
+    Diagonal_heuristic = sqrt(3) * max3 + sqrt(2) * max2 + max1 - max2;
 
+    double Tie_heuristic = Euclidean_heuristic * (1 +  0.00001);
+    if(flag == 1)
+        return Euclidean_heuristic;
+    else if(flag == 2)
+        return Manhattan_heuristic;
+    else if(flag == 3)
+        return Diagonal_heuristic;
+    else    
+        return Tie_heuristic;
 
-    return heuristic;
 }
 
-void AstarPathFinder::AstarGraphSearch(Vector3d start_pt, Vector3d end_pt)
+void AstarPathFinder::AstarGraphSearch(Vector3d start_pt, Vector3d end_pt, int flag)
 {
     ros::Time time_1 = ros::Time::now();    
 
@@ -275,7 +283,7 @@ void AstarPathFinder::AstarGraphSearch(Vector3d start_pt, Vector3d end_pt)
     //put start node in open set
     startPtr -> gScore = 0;
     //STEP 1: finish the AstarPathFinder::getHeu , which is the heuristic function
-    startPtr -> fScore = startPtr -> gScore + getHeu(startPtr, endPtr);   
+    startPtr -> fScore = startPtr -> gScore + getHeu(startPtr, endPtr, flag);   
     startPtr -> id = 1;  // in openlist
     startPtr -> coord = start_pt; // redundancy
     openSet.insert(make_pair(startPtr -> fScore, startPtr));
@@ -340,7 +348,7 @@ void AstarPathFinder::AstarGraphSearch(Vector3d start_pt, Vector3d end_pt)
                 */
                 neighborPtr -> cameFrom = currentPtr;
                 neighborPtr -> gScore = tentative_gScore;
-                neighborPtr -> fScore = neighborPtr -> gScore + getHeu(neighborPtr, endPtr);
+                neighborPtr -> fScore = neighborPtr -> gScore + getHeu(neighborPtr, endPtr, flag);
                 neighborPtr -> id = 1;
                 openSet.insert(make_pair(neighborPtr -> fScore, neighborPtr));
             }
@@ -370,7 +378,7 @@ void AstarPathFinder::AstarGraphSearch(Vector3d start_pt, Vector3d end_pt)
 
                     neighborPtr -> cameFrom = currentPtr;
                     neighborPtr -> gScore = tentative_gScore;
-                    neighborPtr -> fScore = neighborPtr -> gScore + getHeu(neighborPtr, endPtr);
+                    neighborPtr -> fScore = neighborPtr -> gScore + getHeu(neighborPtr, endPtr, flag);
                     openSet.insert(make_pair(neighborPtr -> fScore, neighborPtr));
                 }
             }
@@ -382,7 +390,7 @@ void AstarPathFinder::AstarGraphSearch(Vector3d start_pt, Vector3d end_pt)
                     ROS_INFO("Strange!");
                     neighborPtr -> cameFrom = currentPtr;
                     neighborPtr -> gScore = tentative_gScore;
-                    neighborPtr -> fScore = neighborPtr -> gScore + getHeu(neighborPtr, endPtr);
+                    neighborPtr -> fScore = neighborPtr -> gScore + getHeu(neighborPtr, endPtr, flag);
                 }
             }
         }      

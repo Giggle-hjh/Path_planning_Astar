@@ -113,10 +113,25 @@ void rcvPointCloudCallBack(const sensor_msgs::PointCloud2 & pointcloud_map)
 
 void pathFinding(const Vector3d start_pt, const Vector3d target_pt)
 {
-    //Call A* to search for a path
+    /* //Call A* Euclidean
+    ROS_INFO("Euclidean!");
+    _astar_path_finder->AstarGraphSearch(start_pt, target_pt, 1);
+    auto visited_nodes = _astar_path_finder->getVisitedNodes();
+
+    //Call A* Manhattan
+    ROS_INFO("Manhattan!");
+    _astar_path_finder->AstarGraphSearch(start_pt, target_pt, 2);
+    visited_nodes = _astar_path_finder->getVisitedNodes();
+
+    //Call A* Tie Breaker
+    ROS_INFO("Tie Breaker!");
+    _astar_path_finder->AstarGraphSearch(start_pt, target_pt, 4);
+    visited_nodes = _astar_path_finder->getVisitedNodes(); */
+
+    //Call A* Diagonal
+    ROS_INFO("Diagonal!");
     _astar_path_finder->AstarGraphSearch(start_pt, target_pt);
 
-    //ROS_INFO("Now we will get the path and the visited nodes!");
     //Retrieve the path
     auto grid_path     = _astar_path_finder->getPath();
     auto visited_nodes = _astar_path_finder->getVisitedNodes();
