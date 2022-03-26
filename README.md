@@ -1,18 +1,27 @@
 # Path Planning used A*
 ## 算法流程
+![l流程图](https://github.com/Giggle-hjh/Path_planning_Astar/blob/main/graph/%E6%B5%81%E7%A8%8B%E5%9B%BE.png)
 
+[启发式函数的代码](https://github.com/Giggle-hjh/Path_planning_Astar/blob/main/grid_path_searcher/src/Astar_searcher.cpp#:~:text=double%20AstarPathFinder%3A%3AgetHeu(GridNodePtr%20node1%2C%20GridNodePtr%20node2%2C%20int%20flag))
+
+[A\*搜索路径的代码](https://github.com/Giggle-hjh/Path_planning_Astar/blob/main/grid_path_searcher/src/Astar_searcher.cpp#:~:text=void%20AstarPathFinder%3A%3AAstarGraphSearch(Vector3d%20start_pt%2C%20Vector3d%20end_pt%2C%20int%20flag))
+
+[JPS搜索路径的代码](https://github.com/Giggle-hjh/Path_planning_Astar/blob/main/grid_path_searcher/src/read_only/JPS_searcher.cpp#:~:text=void%20JPSPathFinder%3A%3AJPSGraphSearch(Eigen%3A%3AVector3d%20start_pt%2C%20Eigen%3A%3AVector3d%20end_pt))
 
 ## 运行结果
->这里是以Diagonal heuristic作为例子演示,可以发现能够到达终点,并且探索的节点数目较少.
+>这里是以Diagonal heuristic作为例子演示,可以发现能够到达终点,并且探索的节点数目较少,路径为图中蓝色的节点:
+![运行结果1](https://github.com/Giggle-hjh/Path_planning_Astar/blob/main/graph/2_1.png)
+![运行结果 2](https://github.com/Giggle-hjh/Path_planning_Astar/blob/main/graph/2_2.png)
+![运行结果3](https://github.com/Giggle-hjh/Path_planning_Astar/blob/main/graph/2_3.png)
 
 
 ##  对比不同的启发式函数对A*效率的影响
 ### 不同类型的启发式函数
 >首先在这里可以分析Euclidean以及Diagonal Heuristic是满足admissible的,而因为飞机是可以斜向上飞行的,所以Manhattan是不满足admissible的,因此使用Manhattan可以保证较快的搜索到可行路径,但是不能满足optimality;使用Euclidean以及Diagonal Heuristic可以保证实现optimality,当然作为trade-off,搜索速度会下降一点.
 
->加入Tie Breaker的作用主要是打破f相等的平衡,这里采取$h=h*(1+p)$,这样子h大一点的点代表可能距离目标点比较远,因此这样子调整后可以优先扩展距离目标点近的节点,可以加快扩展速度,同时因为只是稍微加大了一点,不会不满足admissible的条件,还可以实现更快的扩展.
+>加入Tie Breaker的作用主要是打破f相等的平衡,这里采取  $h=h*(1+p)$ ,这样子h大一点的点代表可能距离目标点比较远,因此这样子调整后可以优先扩展距离目标点近的节点,可以加快扩展速度,同时因为只是稍微加大了一点,不会不满足admissible的条件,还可以实现更快的扩展.
 
->实现方法则为在getHeu函数以及AstarGraphSearch函数中添加额外的参数flag,用于确定使用哪个启发式函数来计算当前点到终点的距离.其中Tie Breaker是在Euclidean的基础上改进,因此应和Euclidean进行对比,最终对比结果如下:
+>实现方法则为在getHeu函数以及AstarGraphSearch函数中添加额外的参数[flag](https://github.com/Giggle-hjh/Path_planning_Astar/blob/main/grid_path_searcher/src/Astar_searcher.cpp#:~:text=double%20AstarPathFinder%3A%3AgetHeu(GridNodePtr%20node1%2C%20GridNodePtr%20node2%2C%20int%20flag)),用于确定使用哪个启发式函数来计算当前点到终点的距离.其中Tie Breaker是在Euclidean的基础上改进,因此应和Euclidean进行对比,最终对比结果如下:
 * Case1
 
 |  |Euclidean|Manhattan|Tie_Breaker|Diagonal|
