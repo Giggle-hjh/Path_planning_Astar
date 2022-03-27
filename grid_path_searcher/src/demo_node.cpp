@@ -39,6 +39,7 @@ int _max_x_id, _max_y_id, _max_z_id;
 // ros related
 ros::Subscriber _map_sub, _pts_sub;
 ros::Publisher  _grid_path_vis_pub, _visited_nodes_vis_pub, _grid_map_vis_pub;
+ros::Publisher  _grid_path_line_vis_pub;
 
 AstarPathFinder * _astar_path_finder     = new AstarPathFinder();
 JPSPathFinder   * _jps_path_finder       = new JPSPathFinder();
@@ -47,6 +48,7 @@ void rcvWaypointsCallback(const nav_msgs::Path & wp);
 void rcvPointCloudCallBack(const sensor_msgs::PointCloud2 & pointcloud_map);
 
 void visGridPath( vector<Vector3d> nodes, bool is_use_jps );
+void visGridPathLine( vector<Vector3d> nodes, bool is_use_jps );
 void visVisitedNode( vector<Vector3d> nodes );
 void pathFinding(const Vector3d start_pt, const Vector3d target_pt);
 
@@ -138,15 +140,16 @@ void pathFinding(const Vector3d start_pt, const Vector3d target_pt)
 
     //Visualize the result
     visGridPath(grid_path, false);
+    visGridPathLine(grid_path, false);
     visVisitedNode(visited_nodes);
-
+    
     //Reset map for next call
     _astar_path_finder->resetUsedGrids();
 
     //_use_jps = 0 -> Do not use JPS
     //_use_jps = 1 -> Use JPS
     //you just need to change the #define value of _use_jps
-#define _use_jps 1
+#define _use_jps 0
 #if _use_jps
     {
         ROS_INFO("Use the JPS!");
@@ -179,6 +182,7 @@ int main(int argc, char** argv)
 
     _grid_map_vis_pub             = nh.advertise<sensor_msgs::PointCloud2>("grid_map_vis", 1);
     _grid_path_vis_pub            = nh.advertise<visualization_msgs::Marker>("grid_path_vis", 1);
+    _grid_path_line_vis_pub       = nh.advertise<visualization_msgs::Marker>("grid_path_line_vis", 1);
     _visited_nodes_vis_pub        = nh.advertise<visualization_msgs::Marker>("visited_nodes_vis",1);
 
     nh.param("map/cloud_margin",  _cloud_margin, 0.0);
@@ -312,3 +316,57 @@ void visVisitedNode( vector<Vector3d> nodes )
     _visited_nodes_vis_pub.publish(node_vis);
     ROS_INFO("We have publish the visited nodes!");
 }
+
+void visGridPathLine( vector<Vector3d> nodes, bool is_use_jps )
+{   
+    visualization_msgs::Marker path_vis; 
+    path_vis.header.frame_id = "world";
+    path_vis.header.stamp = ros::Time::now();
+    
+    if(is_use_jps)
+        path_vis.ns = "demo_node/jps_path_line";
+    else
+        path_vis.ns = "demo_node/astar_path_line";
+
+    path_vis.type = visualization_msgs::Marker::LINE_STRIP;
+    path_vis.action = visualization_msgs::Marker::ADD;
+    path_vis.id = 0;
+
+    path_vis.pose.orientation.x = 0.0;
+    path_vis.pose.orientation.y = 0.0;
+    path_vis.pose.orientation.z = 0.0;
+    path_vis.pose.orientation.w = 1.0;
+
+    if(is_use_jps)
+    {
+        path_vis.color.a = 1.0;
+        path_vis.color.r = 0.0;
+        path_vis.color.g = 1.0;
+        path_vis.color.b = 0.0;
+    }
+    else
+    {
+        path_vis.color.a = 1.0;
+        path_vis.color.r = 1.0;  
+        path_vis.color.g = 1.0;   
+        path_vis.color.b = 1.0;
+    }
+
+
+    path_vis.scale.x = _resolution / 4.0;
+
+    geometry_msgs::Point pt;
+    for(int i = 0; i < int(nodes.size()); i++)
+    {
+        Vector3d coord = nodes[i];
+        pt.x = coord(0);
+        pt.y = coord(1);
+        pt.z = coord(2);
+
+        path_vis.points.push_back(pt);
+    }
+
+    _grid_path_line_vis_pub.publish(path_vis);
+    ROS_INFO("We have publish the path in line!");
+}
+
